@@ -1,6 +1,6 @@
 {
   "name": "lgtv-app-keyboard",
-  "version": "0.1",
+  "version": "0.0.1",
   "description": "Simple module to serve as a keyboard for LG WebOS smart TV apps that don't support one",
   "main": "index.js",
   "scripts": {
@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/EnriqueWood/lgtvAppKeyboard",
   "dependencies": {
-    "lgtv2": "1.6.3"
+    "lgtv2": "^1.6.3"
   },
   "devDependencies": {
     "camo-purge": "latest",
