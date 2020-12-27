@@ -1,8 +1,10 @@
 const tvConfig = require('./config/tv')
-const app = require('./config/app/netflix')
-const keyboard = new Map(app.layout)
+let app = require('./config/app/netflix')
+let keyboard = new Map(app.layout)
+let currentAppId = 'netflix'
 const RESET_POINTER_POSITION_THRESHOLD_MILLIS = 2000;
 const RESET_POINTER_RESOLUTION_MILLIS = 250;
+const APP_CHECK_INTERVAL_MILLIS = 1000;
 
 var lgtv = require('lgtv2')({
     url: tvConfig.host
@@ -143,6 +145,7 @@ lgtv.on('connect', function () {
             if (!err) {
                 var stdin = process.stdin;
 
+                // noinspection JSUnresolvedFunction
                 stdin.setRawMode(true);
                 stdin.resume();
                 stdin.setEncoding('utf8');
@@ -157,11 +160,42 @@ lgtv.on('connect', function () {
                         key = ''
                         showBuffer();
                     }
+                    if (key === '\u001B\u005B\u0041') {
+                        sock.send('button', {name: 'UP'});
+                    }
+                    if (key === '\u001B\u005B\u0043') {
+                        sock.send('button', {name: 'RIGHT'});
+                    }
+                    if (key === '\u001B\u005B\u0042') {
+                        sock.send('button', {name: 'DOWN'});
+                    }
+                    if (key === '\u001B\u005B\u0044') {
+                        sock.send('button', {name: 'LEFT'});
+                    }
+                    if (key === '\r' || key === '\r\n') {
+                        sock.send('button', {name: 'ENTER'});
+                    }
                     if (keyboard.has(key)) {
                         addToBuffer(key)
                     }
                 });
                 dumpBuffer(sock)
+                setInterval(() => {
+                    lgtv.subscribe('ssap://com.webos.applicationManager/getForegroundAppInfo', function (err, res) {
+                        if (!err && res.appId !== currentAppId) {
+                            const appConfigFile = `./config/app/${res.appId}`;
+                            try {
+                                let req = require(appConfigFile)
+                                lgtv.request('ssap://system.notifications/createToast', {message: `Detected ${res.appId}`});
+                                app = req
+                                keyboard = new Map(app.layout)
+                                currentAppId = res.appId
+                            }catch (error) {
+                                console.log(`Detected ${res.appId} config file not found in <${appConfigFile}.js>`);
+                            }
+                        }
+                    })
+                }, APP_CHECK_INTERVAL_MILLIS);
             }
         }
     );
