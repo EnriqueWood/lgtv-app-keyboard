@@ -192,6 +192,7 @@ lgtv.on('connect', function () {
                     }
                     if (key === '\u0000') { //ctrl-SpaceBar )
                         await turnOffScreenSequence(sock);
+                        key = ''
                     }
                     if (key === '\' && buffer.length > 0) {
                         console.log('Deleting from buffer')
