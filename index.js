@@ -4,7 +4,7 @@ let keyboard = new Map(app.layout)
 let currentAppId = 'netflix'
 const RESET_POINTER_POSITION_THRESHOLD_MILLIS = 2000;
 const RESET_POINTER_RESOLUTION_MILLIS = 250;
-const APP_CHECK_INTERVAL_MILLIS = 1000;
+const APP_CHECK_INTERVAL_MILLIS = 10000;
 
 var lgtv = require('lgtv2')({
     url: tvConfig.host
@@ -17,6 +17,42 @@ lgtv.on('error', function (err) {
 lgtv.on('connecting', function () {
     console.log('connecting');
 });
+
+function promise(timeout, callback) {
+    return new Promise(((resolve, reject) => setTimeout(() => {
+        if (callback instanceof Function) {
+            callback.call()
+        }
+        resolve("done")
+    }, timeout)))
+}
+
+async function turnOffScreenSequence(sock) {
+    sock.send('button', {name: 'MENU'});
+    await promise(1000)
+    sock.send('button', {name: 'UP'});
+    sock.send('button', {name: 'ENTER'});
+    await promise(2500)
+    sock.send('button', {name: 'RIGHT'});
+    await promise(1500)
+    // All the way down so in it doesn't matther whether Aspect Ration Settings is enabled or not 
+    sock.send('button', {name: 'DOWN'});
+    sock.send('button', {name: 'DOWN'});
+    sock.send('button', {name: 'DOWN'});
+    sock.send('button', {name: 'DOWN'});
+    sock.send('button', {name: 'DOWN'});
+    sock.send('button', {name: 'UP'});
+    sock.send('button', {name: 'UP'});
+    sock.send('button', {name: 'UP'});
+    sock.send('button', {name: 'ENTER'});
+    await promise(2500)
+    sock.send('button', {name: 'DOWN'});
+    sock.send('button', {name: 'DOWN'});
+    sock.send('button', {name: 'DOWN'});
+    sock.send('button', {name: 'DOWN'});
+    sock.send('button', {name: 'DOWN'});
+    sock.send('button', {name: 'ENTER'});
+}
 
 lgtv.on('connect', function () {
     let buffer = ''
@@ -144,15 +180,18 @@ lgtv.on('connect', function () {
         function (err, sock) {
             if (!err) {
                 var stdin = process.stdin;
-
-                // noinspection JSUnresolvedFunction
-                stdin.setRawMode(true);
+                if (process.stdin.isTTY) {
+                    process.stdin.setRawMode(true);
+                }
                 stdin.resume();
                 stdin.setEncoding('utf8');
-                stdin.on('data', function (key) {
-                    // ctrl-c ( end of text )
-                    if (key === '\u0003') {
+                stdin.on('data', async function (key) {
+
+                    if (key === '\u0003') {// ctrl-c 
                         process.exit();
+                    }
+                    if (key === '\u0000') { //ctrl-SpaceBar )
+                        await turnOffScreenSequence(sock);
                     }
                     if (key === '\' && buffer.length > 0) {
                         console.log('Deleting from buffer')
@@ -175,6 +214,7 @@ lgtv.on('connect', function () {
                     if (key === '\r' || key === '\r\n') {
                         sock.send('button', {name: 'ENTER'});
                     }
+
                     if (keyboard.has(key)) {
                         addToBuffer(key)
                     }
@@ -190,7 +230,7 @@ lgtv.on('connect', function () {
                                 app = req
                                 keyboard = new Map(app.layout)
                                 currentAppId = res.appId
-                            }catch (error) {
+                            } catch (error) {
                                 console.log(`Detected ${res.appId} config file not found in <${appConfigFile}.js>`);
                             }
                         }
