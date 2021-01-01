@@ -29,28 +29,41 @@ function promise(timeout, callback) {
 
 async function turnOffScreenSequence(sock) {
     sock.send('button', {name: 'MENU'});
-    await promise(1000)
+    await promise(1500)
     sock.send('button', {name: 'UP'});
     sock.send('button', {name: 'ENTER'});
-    await promise(2500)
+    await promise(3000)
     sock.send('button', {name: 'RIGHT'});
-    await promise(1500)
+    await promise(2000)
     // All the way down so in it doesn't matther whether Aspect Ration Settings is enabled or not 
     sock.send('button', {name: 'DOWN'});
+    await promise(50)
     sock.send('button', {name: 'DOWN'});
+    await promise(50)
     sock.send('button', {name: 'DOWN'});
+    await promise(50)
     sock.send('button', {name: 'DOWN'});
+    await promise(50)
     sock.send('button', {name: 'DOWN'});
+    await promise(50)
     sock.send('button', {name: 'UP'});
+    await promise(50)
     sock.send('button', {name: 'UP'});
+    await promise(50)
     sock.send('button', {name: 'UP'});
+    await promise(50)
     sock.send('button', {name: 'ENTER'});
     await promise(2500)
     sock.send('button', {name: 'DOWN'});
+    await promise(50)
     sock.send('button', {name: 'DOWN'});
+    await promise(50)
     sock.send('button', {name: 'DOWN'});
+    await promise(50)
     sock.send('button', {name: 'DOWN'});
+    await promise(50)
     sock.send('button', {name: 'DOWN'});
+    await promise(50)
     sock.send('button', {name: 'ENTER'});
 }
 
